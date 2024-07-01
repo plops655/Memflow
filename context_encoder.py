@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from utilities import pad_for_conv2d, Res_Layer
+from utils.utilities import pad_for_conv2d, Res_Layer
 
 class Context_Encoder(nn.Module):
 
