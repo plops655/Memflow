@@ -4,10 +4,10 @@ from ResUnit import ResUnit
 from utils.utilities import *
 
 
-class Feature_Encoder(nn.Module):
+class Encoder(nn.Module):
 
     def __init__(self, norm_fn = 'group', dropout = 0.0):
-        super(Feature_Encoder, self).__init__()
+        super(Encoder, self).__init__()
 
         self.norm_fn = norm_fn
 

@@ -1,0 +1,4 @@
+July 8, 2024: Add dropout capability to encoder.py
+Edit Motion_Encoder to take feat1, feat2 as inputs to forward, not class vars
+Add loss function class
+Chain everything, add psnr loss and timings, run pretraining for a bunch of epochs on Monka opf dataset
