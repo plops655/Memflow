@@ -1,4 +1,8 @@
-July 8, 2024: Add dropout capability to encoder.py
-Edit Motion_Encoder to take feat1, feat2 as inputs to forward, not class vars
+THINGS TO CHECK MANUALLY:
+correlation_lookup.py
+
+THINGS TO THINK ABOUT:
+how should i code GRU hidden state? I'm thinking of making hidden state a part of the class. Should i initialize stuff randn?
+
 Add loss function class
 Chain everything, add psnr loss and timings, run pretraining for a bunch of epochs on Monka opf dataset

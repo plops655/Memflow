@@ -10,6 +10,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
 
         self.norm_fn = norm_fn
+        self.dropout = dropout
 
         self.conv1 = nn.Conv2d(in_channels = 3, out_channels = 64, kernel_size=7, stride = 2, padding = 0)
 
@@ -45,6 +46,8 @@ class Encoder(nn.Module):
 
 
     def forward(self, x):
+
+        # Input
 
         x = nn.Sequential(self.conv1, self.norm1, F.relu)(x)
         x = nn.Sequential(self.layer1, self.layer2, self.layer3)(x)

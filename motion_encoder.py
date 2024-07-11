@@ -9,15 +9,14 @@ from utils.consts import H, W, r, len_of_lookup
 class Motion_Encoder(nn.Module):
 
 
-    def __init__(self, feat1, feat2, curr_flow):
+    def __init__(self):
         # Inputs: motion_lookup ~ H / 8 x W / 8 x 4 x lookup_len tensor containing desired correlation data
         #         cost_encoder  ~ learnable (SK_Block, SK_Block) for cost (why??)
         #         flow_encoder  ~ learnable (SK_Block, SK_Block) for cost
 
         super(Motion_Encoder, self).__init__()
         C_out = W // 8
-        self.motion_lookup = Lookup(feat1, feat2, curr_flow, r=r)
-        self.curr_flow = curr_flow
+        self.motion_lookup = Lookup()
         self.cost_encoder = nn.Sequential(ConicalBlock(large_kernel=(7,7), small_kernel=(3,3), stride=1, in_channels=C_out,
                                                        out_channels=C_out, norm_fn='group'),
                                           ConicalBlock(large_kernel=(7, 7), small_kernel=(3, 3), stride=1,
@@ -31,19 +30,14 @@ class Motion_Encoder(nn.Module):
         self.costflow_encoder = ConicalBlock(large_kernel=(7,7), small_kernel=(3,3), stride=1, in_channels = C_out,
                                              out_channels=C_out, norm_fn='group')
 
-    def forward(self, x):
+    def forward(self, feat1, feat2, curr_flow):
         # start SK MOE:
         # reshape motion_lookup to 4 x lookup_len_tensor x H / 8 x W / 8
 
         # should do permutations in correlation_lookup for consistency
 
-        encoded_cost = self.cost_encoder(self.motion_lookup)
-        encoded_flow = self.flow_encoder(self.curr_flow.unsqueeze(0))
-
-        # H1, W1 = encoded_flow.shape
-        #
-        # assert _ == 4, f"Error: encoded_cost.shape is {encoded_cost.shape}. Third dimension must be 4."
-        # assert H == H1 and W == W1, "Error: first 2 dimensions of flow and cost don't match"
+        encoded_cost = self.cost_encoder(self.motion_lookup.forward(feat1, feat2, curr_flow))
+        encoded_flow = self.flow_encoder.forward(curr_flow.unsqueeze(0))
 
         # 4 * len_of_lookup x H / 8 x W / 8
         encoded_cost_flat = encoded_cost.view(4 * len_of_lookup, H // 8, W // 8)

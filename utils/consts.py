@@ -17,3 +17,12 @@ N = 100
 # Hidden Dimension for GRU
 
 hidden_dimension = 64
+
+
+def set_H(H_val):
+    global H
+    H = H_val
+
+def set_W(W_val):
+    global W
+    W = W_val
