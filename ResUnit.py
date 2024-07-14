@@ -1,15 +1,18 @@
 import torch
 import torch.nn as nn
 
+from Helper.pad import pad_for_conv2d
+
 class ResUnit(nn.Module):
 
     def __init__(self, in_dimensions, out_dimensions, stride, norm_fn='group'):
 
         super(ResUnit, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels=in_dimensions, out_channels=out_dimensions, kernel_size=(3,3), padding=1,
-                               stride=stride)
-        self.conv2 = nn.Conv2d(in_channels=out_dimensions, out_channels=out_dimensions, kernel_size=(3,3), padding=1)
+        self.conv1 = nn.Conv2d(in_channels=in_dimensions, out_channels=out_dimensions, kernel_size=(3,3), stride=stride,
+                               padding=0)
+        self.conv2 = nn.Conv2d(in_channels=out_dimensions, out_channels=out_dimensions, kernel_size=(3,3),
+                               padding='same')
 
         num_groups = out_dimensions // 8
 
@@ -42,7 +45,7 @@ class ResUnit(nn.Module):
 
         if stride > 1:
             self.downsample = nn.Sequential(nn.Conv2d(in_channels=out_dimensions, out_channels=out_dimensions,
-                                                      stride=stride), self.norm3)
+                                                      kernel_size=(3,3), stride=stride, padding = 0), self.norm3)
 
     def forward(self, x):
 

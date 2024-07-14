@@ -1,30 +1,14 @@
-from Datasets.dataset_paths import KITTI_data_path
-import os
+from Datasets.BaseDataset import BaseDataset
+from pathlib import Path
 
-from torch.utils.data import Dataset
+class KittiDataset(BaseDataset):
+    def __init__(self, transform=None):
 
-
-class KittiDataset(Dataset):
-
-    def __init__(self, img_dir):
-
-        self.img_dir = img_dir
-        self.items = []
-
-        i = 0
-        while os.path.isfile(self.filename(i)):
-            self.items.append(self.filename(i))
-            i += 1
+        super(KittiDataset, self).__init__(transform)
 
     def filename(self, i: int) -> str:
-        return self.img_dir + "/" + f"{i:010d}" + ".png"
-
-    def __len__(self):
-        return len(self.items)
-
-    def __getitem__(self, item):
-        return self.items[item]
+        return (str(Path(__file__).parent.parent.parent/"KITTI/2011_09_26/2011_09_26_drive_0001_extract/image_00/data") +
+                "/" + f"{i:010d}" + ".png")
 
 if __name__ == "__main__":
-    sample_dataset = KittiDataset(KITTI_data_path)
-    print(len(sample_dataset))
+    sample_dataset = KittiDataset()

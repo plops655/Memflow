@@ -2,7 +2,7 @@ THINGS TO CHECK MANUALLY:
 correlation_lookup.py
 
 THINGS TO THINK ABOUT:
-how should i code GRU hidden state? I'm thinking of making hidden state a part of the class. Should i initialize stuff randn?
+hidden state not a parameter thus just have it as a parameter. How does gradient flow through GRU if not detached?
 
 Add loss function class
 Chain everything, add psnr loss and timings, run pretraining for a bunch of epochs on Monka opf dataset

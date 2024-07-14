@@ -2,11 +2,14 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+from Helper.pad import pad_for_conv2d
+
 
 class SKBlock(nn.Module):
 
     name = "SKBlock"
     def __init__(self, large_kernel, small_kernel, stride, in_channels, out_channels, norm_fn='group'):
+
         super(SKBlock, self).__init__()
         self.L = large_kernel
         self.S = small_kernel
@@ -43,19 +46,19 @@ class DirectBlock(SKBlock):
         super(DirectBlock, self).__init__(large_kernel, small_kernel, stride, in_channels, out_channels)
 
         self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=self.L,
-                       stride=self.stride, groups=in_channels, padding=0)
+                       stride=self.stride, groups=in_channels, padding=pad_for_conv2d((self.L, self.L), self.stride))
 
         self.conv00 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels * 1.5, kernel_size=(1, 1),
-                       stride=1, padding=0)
+                       stride=1, padding='same')
 
         self.conv01 = nn.Conv2d(in_channels=in_channels * 1.5, out_channels=in_channels, kernel_size=(1, 1),
-                       stride=1, padding=0)
+                       stride=1, padding='same')
 
         self.conv10 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels * 1.5, kernel_size=(1, 1),
-                       stride=1, padding=0)
+                       stride=1, padding='same')
 
         self.conv11 = nn.Conv2d(in_channels=in_channels * 1.5, out_channels=out_channels, kernel_size=(1, 1),
-                       stride=1, padding=0)
+                       stride=1, padding='same')
 
     def forward(self, x):
         # Input: rgb image with 3 channels (red, green, blue)
@@ -75,22 +78,22 @@ class ParallelBlock(SKBlock):
         super(ParallelBlock, self).__init__(large_kernel, small_kernel, stride, in_channels, out_channels, norm_fn)
 
         self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=self.L,
-                       stride=self.stride, groups=in_channels, padding=0)
+                       stride=self.stride, groups=in_channels, padding=pad_for_conv2d((self.L, self.L), self.stride))
 
         self.conv2 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=self.S,
-                         stride=self.stride, groups=in_channels, padding=0)
+                         stride=self.stride, groups=in_channels, padding=pad_for_conv2d((self.S, self.S), self.stride))
 
         self.conv00 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels * 1.5, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv01 = nn.Conv2d(in_channels=in_channels * 1.5, out_channels=in_channels, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv10 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels * 1.5, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv11 = nn.Conv2d(in_channels=in_channels * 1.5, out_channels=out_channels, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
     def forward(self, x):
         # Input: rgb image with 3 channels (red, green, blue)
@@ -112,22 +115,22 @@ class FunnelBlock(SKBlock):
         super(FunnelBlock, self).__init__(large_kernel, small_kernel, stride, in_channels, out_channels, norm_fn)
 
         self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=self.L,
-                               stride=self.stride, groups=in_channels, padding=0)
+                               stride=self.stride, groups=in_channels, padding=pad_for_conv2d((self.L, self.L), self.stride))
 
         self.conv2 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=self.S,
-                               stride=self.stride, groups=in_channels, padding=0)
+                               stride=self.stride, groups=in_channels, padding=pad_for_conv2d((self.S, self.S), self.stride))
 
         self.conv00 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels * 1.5, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv01 = nn.Conv2d(in_channels=in_channels * 1.5, out_channels=in_channels, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv10 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels * 1.5, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv11 = nn.Conv2d(in_channels=in_channels * 1.5, out_channels=out_channels, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
     def forward(self, x):
 
@@ -147,22 +150,22 @@ class ConicalBlock(SKBlock):
         super(ConicalBlock, self).__init__(large_kernel, small_kernel, stride, in_channels, out_channels, norm_fn)
 
         self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=self.S,
-                               stride=self.stride, groups=in_channels, padding=0)
+                               stride=self.stride, groups=in_channels, padding=pad_for_conv2d((self.S, self.S), self.stride))
 
         self.conv2 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=self.L,
-                               stride=self.stride, groups=in_channels, padding=0)
+                               stride=self.stride, groups=in_channels, padding=pad_for_conv2d((self.L, self.L), self.stride))
 
         self.conv00 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels * 1.5, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv01 = nn.Conv2d(in_channels=in_channels * 1.5, out_channels=in_channels, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv10 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels * 1.5, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
         self.conv11 = nn.Conv2d(in_channels=in_channels * 1.5, out_channels=out_channels, kernel_size=(1, 1),
-                                stride=1, padding=0)
+                                stride=1, padding='same')
 
 
     def forward(self, x):

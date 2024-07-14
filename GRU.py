@@ -10,10 +10,9 @@ class RAFT_GRU(nn.Module):
 
         self.Dk = 256
         self.Dv = 4 * len_of_lookup + 4
-        self.hidden_dim = 20
 
-        C_in = 2 * self.Dk + self.Dv + self.hidden_dim
-        C_out = self.hidden_dim
+        C_in = 2 * self.Dk + self.Dv + 64
+        C_out = 64
 
         self.Z = nn.Conv2d(in_channels=C_in, out_channels=C_out, kernel_size=(3,3))
         self.R = nn.Conv2d(in_channels=C_in, out_channels=C_out, kernel_size=(3,3))
@@ -29,7 +28,7 @@ class RAFT_GRU(nn.Module):
         rt = F.sigmoid(self.R(torch.cat((h, x), dim=1)))
         ht_update = F.tanh(self.H(torch.cat((rt * h, x), dim=1)))
 
-        ones = torch.ones(1, self.hidden_dim, H // 8, W // 8)
+        ones = torch.ones(1, 64, H // 8, W // 8)
         ht = (ones - zt) * h + zt * ht_update
 
         return ht

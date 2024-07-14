@@ -13,30 +13,55 @@ def add_flow(img, flw):
 
     H, W, D = img.shape
     grid_x, grid_y = np.meshgrid(np.arange(W), np.arange(H))
-    map_x = grid_x.astype(np.float32) + flw[:,:,0].astype(np.float32)
-    map_y = grid_y.astype(np.float32) + flw[:,:,1].astype(np.float32)
+    map_x = grid_x.astype(np.float32) + flw[:,:,1].astype(np.float32)
+    map_y = grid_y.astype(np.float32) + flw[:,:,0].astype(np.float32)
 
     out_img = cv.remap(img.astype(np.float32), map_x, map_y, interpolation=cv.INTER_LINEAR)
     return out_img
 
-if __name__ == "__main__":
-    dataset = KittiDataset(KITTI_data_path)
+def set_rgbw_frame():
 
-    first_frame = cv.imread(dataset[0])
+    first_frame = np.empty((512, 1392, 3))
+
+    for r in range(256):
+        for c in range(696):
+            first_frame[r, c, :] = red
+        for c in range(696, 1392):
+            first_frame[r, c, :] = green
+
+    for r in range(256, 512):
+        for c in range(696):
+            first_frame[r, c, :] = blue
+        for c in range(696, 1392):
+            first_frame[r, c, :] = white
+
+    return first_frame
+
+def set_rgbw_flow():
+
+    flow = np.empty((512, 1392, 2))
+    for r in range(512):
+        for c in range(696):
+            flow[r, c, :] = np.array([0, 696])
+        for c in range(696, 1392):
+            flow[r, c, :] = np.array([0, -696])
+
+    return flow
+
+if __name__ == "__main__":
+    red = np.array([255, 0, 0])
+    green = np.array([0, 255, 0])
+    blue = np.array([0, 0, 255])
+    white = np.array([255, 255, 255])
+
+    first_frame = set_rgbw_frame()
+
     cv.imshow("frame", first_frame)
 
-    prev_gray = cv.cvtColor(first_frame, cv.COLOR_BGR2GRAY)
+    flow = set_rgbw_flow()
 
-    second_frame = cv.imread(dataset[1])
+    warped_frame = add_flow(first_frame, flow)
 
-    gray = cv.cvtColor(second_frame, cv.COLOR_BGR2GRAY)
-    flow = cv.calcOpticalFlowFarneback(prev_gray, gray,
-                                       None,
-                                       0.5, 3, 15, 3, 5, 1.2, 0)
-
-    next_frame = add_flow(first_frame, flow)
-    next_frame = next_frame.astype(np.uint8)
-    cv.imshow("Next frame", next_frame)
-
+    cv.imshow("warped frame", warped_frame)
     cv.waitKey(0)
     cv.destroyAllWindows()

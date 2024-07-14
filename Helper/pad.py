@@ -1,8 +1,7 @@
-import torch
-import torch.nn as nn
 from math import *
+from utils.consts import H, W
 
-def pad_for_conv2d(H, W, kernel, stride=1):
+def pad_for_conv2d(kernel, stride=1):
     sx, sy = stride, stride
     kx, ky = kernel
     px = ceil(((sx - 1) * H + kx - sx) / 2)

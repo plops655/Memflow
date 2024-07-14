@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils.consts import H, W, hidden_dimension
+from utils.consts import H, W, hidden_dim
 
 
 class Upsample_Flow(nn.Module):
@@ -12,13 +12,13 @@ class Upsample_Flow(nn.Module):
         num_groups = 8
 
         if self.norm_fn == 'group':
-            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=hidden_dimension)
+            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=hidden_dim)
 
         if self.norm_fn == 'batch':
-            self.norm1 = nn.BatchNorm2d(num_features=hidden_dimension)
+            self.norm1 = nn.BatchNorm2d(num_features=hidden_dim)
 
         if self.norm_fn == 'instance':
-            self.norm1 = nn.InstanceNorm2d(num_features=hidden_dimension)
+            self.norm1 = nn.InstanceNorm2d(num_features=hidden_dim)
 
         if self.norm_fn is None:
             self.norm1 = nn.Sequential()
@@ -29,7 +29,7 @@ class Upsample_Flow(nn.Module):
 
     def forward(self, x):
 
-        # Input: x ~ 1 x hidden_dim=64 x H // 8 x W // 8
+        # Input: x ~ hidden state : 1 x hidden_dim=64 x H // 8 x W // 8
 
         x = F.unfold(x, kernel_size=3, padding=2, stride=1) # 1 x 576 x H // 8 x W // 8
         x = x.view(1, 9, H, W)
