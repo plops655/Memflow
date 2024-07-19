@@ -8,6 +8,8 @@ class RAFT_GRU(nn.Module):
 
     def __init__(self):
 
+        super(RAFT_GRU, self).__init__()
+
         self.Dk = 256
         self.Dv = 4 * len_of_lookup + 4
 

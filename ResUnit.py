@@ -9,8 +9,10 @@ class ResUnit(nn.Module):
 
         super(ResUnit, self).__init__()
 
+        self.stride = stride
+
         self.conv1 = nn.Conv2d(in_channels=in_dimensions, out_channels=out_dimensions, kernel_size=(3,3), stride=stride,
-                               padding=0)
+                               padding=pad_for_conv2d((3,3), stride))
         self.conv2 = nn.Conv2d(in_channels=out_dimensions, out_channels=out_dimensions, kernel_size=(3,3),
                                padding='same')
 
@@ -41,17 +43,28 @@ class ResUnit(nn.Module):
             if stride != 1:
                 self.norm3 = nn.Sequential()
 
-        self.downsample = None
+        if stride == 1:
+            self.norm3 = nn.Sequential()
 
-        if stride > 1:
-            self.downsample = nn.Sequential(nn.Conv2d(in_channels=out_dimensions, out_channels=out_dimensions,
-                                                      kernel_size=(3,3), stride=stride, padding = 0), self.norm3)
+        self.downsample = nn.Sequential(nn.Conv2d(in_channels=in_dimensions, out_channels=out_dimensions,
+                                                  kernel_size=(3, 3), stride=stride,
+                                                  padding=pad_for_conv2d((3, 3), stride)), self.norm3)
 
     def forward(self, x):
 
-        y = self.relu(self.norm2(self.conv2(self.relu(self.norm1(self.conv1(x))))))
+        # y = nn.Sequential(self.conv1, self.norm1, nn.ReLU(), self.conv2, self.norm2, nn.ReLU())(x)
+
+        y = self.conv1(x)
+        y = self.norm1(y)
+        y = nn.ReLU()(y)
+        y = self.conv2(y)
+        y = self.norm2(y)
+        y = nn.ReLU()(y)
 
         if self.downsample:
             x = self.downsample(x)
 
-        return self.relu(x + y)
+        assert x.shape == y.shape
+
+        return nn.ReLU()(x + y)
+

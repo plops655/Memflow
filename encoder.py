@@ -1,8 +1,8 @@
-import torch.nn.functional as F
+import torch.nn as nn
 from ResUnit import ResUnit
 
-from utils.utilities import *
-
+from Helper.pad import pad_for_conv2d
+import utils.consts as consts
 
 class Encoder(nn.Module):
 
@@ -12,7 +12,8 @@ class Encoder(nn.Module):
         self.norm_fn = norm_fn
         self.dropout = dropout
 
-        self.conv1 = nn.Conv2d(in_channels = 3, out_channels = 64, kernel_size=7, stride = 2, padding = 0)
+        self.conv1 = nn.Conv2d(in_channels = 3, out_channels = 64, kernel_size=7, stride = 2,
+                               padding = pad_for_conv2d((7,7), 2))
 
         self.layer1 = nn.Sequential(ResUnit(in_dimensions=64, out_dimensions=64, stride=1),
                                     ResUnit(in_dimensions=64, out_dimensions=64, stride=2))
@@ -23,7 +24,7 @@ class Encoder(nn.Module):
         self.layer3 = nn.Sequential(ResUnit(in_dimensions=128, out_dimensions=192, stride=1),
                                     ResUnit(in_dimensions=192, out_dimensions=192, stride=1))
 
-        self.conv2 = nn.Conv2d(in_channels=192, out_channels=256, kernel_size=3)
+        self.conv2 = nn.Conv2d(in_channels=192, out_channels=256, kernel_size=3, padding='same')
 
         num_groups = 8
 
@@ -49,9 +50,22 @@ class Encoder(nn.Module):
 
         # Input
 
-        x = nn.Sequential(self.conv1, self.norm1, F.relu)(x)
-        x = nn.Sequential(self.layer1, self.layer2, self.layer3)(x)
-        x = nn.Sequential(self.conv2, self.norm2, F.relu)(x)
+        x = x.unsqueeze(0)
+        x = nn.Sequential(self.conv1, self.norm1, nn.ReLU())(x)
+
+        # x = self.layer1(x)
+        x = ResUnit(in_dimensions=64, out_dimensions=64, stride=1).forward(x)
+        x = ResUnit(in_dimensions=64, out_dimensions=64, stride=2).forward(x)
+
+        # x = self.layer2(x)
+        x = ResUnit(in_dimensions=64, out_dimensions=128, stride=1).forward(x)
+        x = ResUnit(in_dimensions=128, out_dimensions=128, stride=2).forward(x)
+
+        # x = self.layer3(x)
+        x = ResUnit(in_dimensions=128, out_dimensions=192, stride=1).forward(x)
+        x = ResUnit(in_dimensions=192, out_dimensions=192, stride=1).forward(x)
+
+        x = nn.Sequential(self.conv2, self.norm2, nn.ReLU())(x)
 
         # Dropout at the end unless we overfit. Prevents slow feature encoding.
 

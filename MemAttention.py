@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from math import sqrt, log
 
-from utils.consts import H, W, len_of_lookup, L, N
+import utils.consts as consts
 
 class MemAttention(nn.Module):
 
@@ -13,8 +13,10 @@ class MemAttention(nn.Module):
 
         self.alpha = 0
 
+        H, W, len_of_lookup, batch_sz = (consts.H, consts.W, consts.len_of_lookup, consts.batch_sz)
+
         self.Dk = 256
-        self.Dv = 4 * len_of_lookup + 4
+        self.Dv = 4 * batch_sz * len_of_lookup + 4
 
         self.key_buffer = torch.empty(0, self.Dk, H // 8, W // 8)
         self.value_buffer = torch.empty(0, self.Dv, H // 8, W // 8)
@@ -32,6 +34,8 @@ class MemAttention(nn.Module):
 
         # Output: fam ~ 1 x Dv x H / 8 x W / 8
 
+        H, W, L, N = (consts.H, consts.W, consts.L, consts.N)
+
         matmul = lambda a, b: torch.einsum('ijkl,jm->imkl', a, b)
 
         q = matmul(fc, self.Q)              # 1 x Dk x H / 8 x W / 8
@@ -47,7 +51,8 @@ class MemAttention(nn.Module):
         self.key_buffer = k
         self.value_buffer = v
 
-        fam = fm + self.alpha * torch.einsum('imkl,mnkl->inkl', F.softmax(log(L * H // 8 * W // 8 + H // 8 * W // 8, N) / sqrt(self.Dk) * torch.einsum('ijkl,mjkl->imkl', q, k)),
+        fam = fm + self.alpha * torch.einsum('imkl,mnkl->inkl',
+                                             F.softmax(log(L * H // 8 * W // 8 + H // 8 * W // 8, consts.N) / sqrt(self.Dk) * torch.einsum('ijkl,mjkl->imkl', q, k)),
                                        v)
 
         return fam

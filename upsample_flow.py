@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils.consts import H, W, hidden_dim
+import utils.consts as consts
 
 
 class Upsample_Flow(nn.Module):
@@ -11,19 +11,19 @@ class Upsample_Flow(nn.Module):
 
         num_groups = 8
 
-        if self.norm_fn == 'group':
-            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=hidden_dim)
+        if norm_fn == 'group':
+            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=consts.hidden_dim)
 
-        if self.norm_fn == 'batch':
-            self.norm1 = nn.BatchNorm2d(num_features=hidden_dim)
+        if norm_fn == 'batch':
+            self.norm1 = nn.BatchNorm2d(num_features=consts.hidden_dim)
 
-        if self.norm_fn == 'instance':
-            self.norm1 = nn.InstanceNorm2d(num_features=hidden_dim)
+        if norm_fn == 'instance':
+            self.norm1 = nn.InstanceNorm2d(num_features=consts.hidden_dim)
 
-        if self.norm_fn is None:
+        if norm_fn is None:
             self.norm1 = nn.Sequential()
 
-        self.mask = nn.init.xavier_uniform_(torch.randn(1, 576, H // 8, W // 8))
+        self.mask = nn.init.xavier_uniform_(torch.randn(1, 576, consts.H // 8, consts.W // 8))
         self.conv1 = nn.Conv2d(in_channels=576, out_channels = 576, kernel_size=(3,3))
         self.conv2 = nn.Conv2d(in_channels=1, out_channels = 2, kernel_size=(3,3))
 
@@ -32,10 +32,10 @@ class Upsample_Flow(nn.Module):
         # Input: x ~ hidden state : 1 x hidden_dim=64 x H // 8 x W // 8
 
         x = F.unfold(x, kernel_size=3, padding=2, stride=1) # 1 x 576 x H // 8 x W // 8
-        x = x.view(1, 9, H, W)
+        x = x.view(1, 9, consts.H, consts.W)
 
         self.mask = F.relu(self.norm1(self.conv1(self.mask)))
-        mask_unsqueezed = self.mask.view(1, 9, H, W)
+        mask_unsqueezed = self.mask.view(1, 9, consts.H, consts.W)
         mask_updated = self.conv2(mask_unsqueezed)
 
         mask_softmax = F.softmax(mask_updated, dim=1)

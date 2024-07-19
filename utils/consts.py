@@ -1,18 +1,28 @@
 # H, W for image
-H = 192
-W = 168
+H = 0
+W = 0
 
 # lookup L1 distance
-r = 3
+r = 2
 len_of_lookup = 2 * r**2 + 2 * r + 1
 
+norm_fn = 'group'
+
 # length of memory buffer
-L = 100
+L = 2
 
-# length of sequencies used for training
-N = 100
+# length of sequences used for training
+N = 200
 
-# Train parameters. N_Sintel, N_KittiFLOW, ...
+batch_sz = 1
+
+GRU_iterations = 15
+
+loss_cascade_ratio = 0.85
+
+dropout = 0.1
+
+lr = 0.001
 
 # Hidden Dimension for GRU
 
@@ -25,16 +35,3 @@ def set_H(H_val):
 def set_W(W_val):
     global W
     W = W_val
-
-def set_r_lookup(r_val):
-    global r, len_of_lookup
-    r = r_val
-    len_of_lookup = 2 * r**2 + 2 * r + 1
-
-def set_L(L_val):
-    global L
-    L = L_val
-
-def set_N(N_val):
-    global N
-    N = N_val

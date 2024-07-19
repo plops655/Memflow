@@ -1,8 +1,3 @@
-THINGS TO CHECK MANUALLY:
-correlation_lookup.py
-
-THINGS TO THINK ABOUT:
-hidden state not a parameter thus just have it as a parameter. How does gradient flow through GRU if not detached?
-
-Add loss function class
-Chain everything, add psnr loss and timings, run pretraining for a bunch of epochs on Monka opf dataset
+Debug motion encoder
+Fix batch_sz implementation. Now batch_sz = 1 so it'll work but it is hacky. Batch sz for long term history info
+run pretraining for a bunch of epochs on Monka opf dataset
