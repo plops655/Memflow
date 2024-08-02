@@ -6,7 +6,7 @@ import numpy as np
 
 
 def add_flow(img, flw):
-    # inputs: img ~ H x W x D
+    # curr_frame: img ~ H x W x D
     #         flw ~ H x W x 2
 
     # Outputs: shifted_img ~ H x W x D

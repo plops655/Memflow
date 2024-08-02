@@ -1,4 +1,7 @@
 import torch
+import numpy as np
+
+from utils.consts import H, W
 
 def psnr(ref: torch.Tensor, meas: torch.Tensor, maxVal=255):
     assert torch.Tensor.shape(ref) == torch.Tensor.shape(meas), "Test video must match measured video dimensions"
@@ -15,12 +18,11 @@ def compute_psnr(I_dec, I_ref):
 
     # Your code here:
 
-    H, W = I_dec.shape[1:3]
     MSE = 0.0
     MSE += torch.sum((I_dec - I_ref) ** 2)
 
     MSE = float(MSE / (3 * H * W))
 
-    PSNR = 10.0 * float(torch.log10(255.0 ** 2 / MSE))
+    PSNR = 10.0 * float(np.log10(255.0 ** 2 / MSE))
 
     return PSNR

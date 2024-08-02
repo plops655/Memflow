@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
 def add_flow(img, flw):
-    # inputs: img ~ D x H x W
+    # curr_frame: img ~ D x H x W
     #         flw ~ H x W x 2
 
     # Outputs: shifted_img ~ D x H x W

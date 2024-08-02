@@ -1,5 +1,5 @@
 from Helper.debug_read_write import read_from_debug
-from SKBlock import ConicalBlock
+from core.SKBlock import ConicalBlock
 
 
 if __name__ == '__main__':

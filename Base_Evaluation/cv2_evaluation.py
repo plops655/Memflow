@@ -1,12 +1,12 @@
-from Datasets.dataset_paths import KITTI_data_path
-from Datasets.KittiDataset import KittiDataset
+from Dataset import OptFlowDataset
 
 import cv2 as cv
 import numpy as np
 
+from pathlib import Path
 
 def add_flow(img, flw):
-    # inputs: img ~ H x W x D
+    # curr_frame: img ~ H x W x D
     #         flw ~ H x W x 2
 
     # Outputs: shifted_img ~ H x W x D
@@ -22,12 +22,15 @@ def add_flow(img, flw):
     return out_img
 
 if __name__ == "__main__":
-    dataset = KittiDataset(KITTI_data_path)
-    first_frame = cv.imread(dataset[0])
+
+    toyota_img_dir = str(Path(__file__).parent.parent.parent / "TOYOTA/")
+    toyota_dataset = OptFlowDataset(img_dir=toyota_img_dir)
+
+    first_frame = cv.imread(toyota_dataset[0])
     prev_gray = cv.cvtColor(first_frame, cv.COLOR_BGR2GRAY)
     cv.imshow("frame", first_frame)
 
-    second_frame = cv.imread(dataset[1])
+    second_frame = cv.imread(toyota_dataset[1])
     gray = cv.cvtColor(second_frame, cv.COLOR_BGR2GRAY)
     flow = cv.calcOpticalFlowFarneback(prev_gray, gray,
                                        None,
@@ -42,8 +45,9 @@ if __name__ == "__main__":
     mask = np.zeros_like(first_frame)
     mask[..., 1] = 255
     i = 0
-    while i < len(dataset):
-        frame = cv.imread(dataset[i])
+
+    while i < len(toyota_dataset):
+        frame = cv.imread(toyota_dataset[i])
         cv.imshow("input", frame)
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         flow = cv.calcOpticalFlowFarneback(prev_gray, gray,

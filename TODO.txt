@@ -1,3 +1,0 @@
-Debug motion encoder
-Fix batch_sz implementation. Now batch_sz = 1 so it'll work but it is hacky. Batch sz for long term history info
-run pretraining for a bunch of epochs on Monka opf dataset

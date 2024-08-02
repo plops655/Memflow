@@ -1,6 +1,6 @@
 # H, W for image
-H = 0
-W = 0
+H = 320
+W = 320
 
 # lookup L1 distance
 r = 2
@@ -12,9 +12,9 @@ norm_fn = 'group'
 L = 2
 
 # length of sequences used for training
-N = 200
+train_sz = 44
 
-batch_sz = 1
+batch_sz = 4
 
 GRU_iterations = 15
 

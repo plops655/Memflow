@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # next model
 
-    # print("Enter model inputs")
+    # print("Enter model curr_frame")
     #
     # epochs = input("epochs (default: 20): ")
     # if not epochs:
