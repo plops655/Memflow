@@ -13,7 +13,7 @@ class Upsample_Flow(nn.Module):
         num_groups = 8
 
         if norm_fn == 'group':
-            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=hidden_dim * 9)
+            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=576)
 
         if norm_fn == 'batch':
             self.norm1 = nn.BatchNorm2d(num_features=hidden_dim)
@@ -28,7 +28,7 @@ class Upsample_Flow(nn.Module):
         # self.conv1 = nn.Conv2d(in_channels=576, out_channels=576, kernel_size=(3,3), padding=pad_for_conv2d((3,3)))
         # self.conv2 = nn.Conv2d(in_channels=9, out_channels=9, kernel_size=(3,3), padding=pad_for_conv2d((3,3)))
 
-        self.conv1 = nn.Conv2d(in_channels=64, out_channels=576, kernel_size=(3,3), padding=pad_for_conv2d((3,3)))
+        self.conv1 = nn.Conv2d(in_channels=hidden_dim, out_channels=576, kernel_size=(3,3), padding=pad_for_conv2d((3,3)))
         self.conv2 = nn.Conv2d(in_channels=576, out_channels=576, kernel_size=(3,3), padding=pad_for_conv2d((3,3)))
 
     def forward(self, x, h):

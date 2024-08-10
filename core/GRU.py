@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils.consts import H, W, batch_sz, len_of_lookup
+from utils.consts import device, H, W, hidden_dim, batch_sz, len_of_lookup
 from Helper.pad import pad_for_conv2d
 
 class RAFT_GRU(nn.Module):
@@ -14,8 +14,10 @@ class RAFT_GRU(nn.Module):
         self.Dk = 256
         self.Dv = 4 * len_of_lookup + 4
 
-        C_in = 2 * self.Dv + self.Dk + 64
-        C_out = 64
+        C_in = 2 * self.Dv + self.Dk + hidden_dim
+        C_out = hidden_dim
+
+        self.ones = torch.ones(batch_sz, hidden_dim, H // 8, W // 8).to(device).detach()
 
         self.Z = nn.Conv2d(in_channels=C_in, out_channels=C_out, kernel_size=(3,3), padding='same')
         self.R = nn.Conv2d(in_channels=C_in, out_channels=C_out, kernel_size=(3,3), padding='same')
@@ -33,7 +35,6 @@ class RAFT_GRU(nn.Module):
         rt = F.sigmoid(self.R(torch.cat((h, x), dim=1)))
         ht_update = F.tanh(self.H(torch.cat((rt * h, x), dim=1)))
 
-        ones = torch.ones(batch_sz, 64, H // 8, W // 8)
-        ht = (ones - zt) * h + zt * ht_update
+        ht = (self.ones - zt) * h + zt * ht_update
 
         return ht

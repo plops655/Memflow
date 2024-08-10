@@ -2,9 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from core.corr_vol import compute_corr_vol
-
-from utils.consts import H, W, batch_sz, r, len_of_lookup
+from utils.consts import device, H, W, batch_sz, r, len_of_lookup
 
 from Helper.debug_read_write import write_to_debug
 
@@ -12,6 +10,24 @@ class Lookup(nn.Module):
 
     def __init__(self):
         super(Lookup, self).__init__()
+
+    def compute_corr_vol(self, g_0, g_1, depth_of_features=0):
+
+        assert depth_of_features >= 0, "corr_vol.py: depth_of_features to be pooled is too small"
+        assert H >= 8 and W >= 8, f"corr_vol.py: H={H}, W={W} of features not big enough to downsample {depth_of_features} times"
+
+        corr_vol_lst = []
+        downsampler = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
+
+        for i in range(0, depth_of_features + 1):
+
+            corr_vol = torch.einsum('nhij,nhkl->nijkl', g_0, g_1)
+
+            corr_vol_lst.append(corr_vol)
+            if i < depth_of_features:
+                g_1 = downsampler(g_1)
+
+        return corr_vol_lst
 
     def lookup_i_j(self, i, j, k, curr_flow):
         # curr_frame: i, j ~ the position of lookup
@@ -22,7 +38,7 @@ class Lookup(nn.Module):
 
         h, w = H / (8 * 2 ** k), W / (8 * 2 ** k)
         tensor_lst = []
-        ones = torch.ones(batch_sz)
+        ones = torch.ones(batch_sz).to(device)
         for y in range(-r, r + 1):
             for x in range(abs(y) - r, r - abs(y) + 1):
                 curr_tensor = torch.stack(((j / 2 ** k * ones + curr_flow[:, 1, i, j] / 2 ** k + x * ones) / (w / 2) - ones,
@@ -39,18 +55,20 @@ class Lookup(nn.Module):
         #        k        ~ depth of pooling
 
         # Output: lookup_tensors ~ (batch_sz, H / 8, W / 8, len(lookup))
-
-        lookup_tensor = torch.empty(batch_sz, H // 8, W // 8, len_of_lookup)
+        lookup_tensor = torch.empty(batch_sz, H // 8, W // 8, len_of_lookup).to(device)
         for i in range(H // 8):
             for j in range(W // 8):
                 sub_corr_vol = corr_vol[:, i, j, :, :].unsqueeze(1)
                 sub_grid = self.lookup_i_j(i, j, k, curr_flow)
                 sub_grid = sub_grid.unsqueeze(1)
                 try:
-                    assert torch.max(torch.abs(sub_grid)) <= 5
+                    assert (torch.max(torch.abs(sub_grid)) <= 5).item()
+                    assert (torch.any(torch.isinf(sub_grid)) == False).item() and (torch.any(torch.isnan(sub_grid)) == False).item()
                 except AssertionError:
                     write_to_debug(sub_grid, 'sub_grid')
                     print(f"Assertion Error in correlation_lookup.py/lookup_from_corr where i,j ={i},{j}")
+                if sub_corr_vol.shape == (3,1,40,40):
+                    print("Check it out")
                 interpolated_lookup = F.grid_sample(sub_corr_vol, sub_grid, mode='bilinear', align_corners=True)
                 lookup_tensor[:, i, j, :] = interpolated_lookup.squeeze((1, 2))
         return lookup_tensor
@@ -65,7 +83,7 @@ class Lookup(nn.Module):
 
         # output: motion_lookup ~ batch_sz x H / 8 x W / 8 x 4 x len(lookup) tensor containing desired correlation data for motion encoder
 
-        corr_vol_1, corr_vol_2, corr_vol_4, corr_vol_8 = compute_corr_vol(
+        corr_vol_1, corr_vol_2, corr_vol_4, corr_vol_8 = self.compute_corr_vol(
             g_0=feat1, g_1=feat2, depth_of_features=3)
 
         lookup_tensor_1 = self.lookup_from_corr(corr_vol=corr_vol_1, curr_flow=curr_flow, k=0)
@@ -73,7 +91,7 @@ class Lookup(nn.Module):
         lookup_tensor_4 = self.lookup_from_corr(corr_vol=corr_vol_4, curr_flow=curr_flow, k=2)
         lookup_tensor_8 = self.lookup_from_corr(corr_vol=corr_vol_8, curr_flow=curr_flow, k=3)
 
-        motion_lookup = torch.empty((batch_sz, H // 8, W // 8, 4, len_of_lookup))
+        motion_lookup = torch.empty((batch_sz, H // 8, W // 8, 4, len_of_lookup)).to(device)
 
         motion_lookup[:, :, :, 0, :] = lookup_tensor_1
         motion_lookup[:, :, :, 1, :] = lookup_tensor_2

@@ -15,33 +15,36 @@ import time
 
 class OptFlowDataset(Dataset):
 
-    def __init__(self, img_dir, cutoff=None, transform=Compose([Resize(320), CenterCrop(320), ToTensor()])):
+    def __init__(self, img_dir, cutoff=None, transform=None, jump=1):
 
         self.img_dir = img_dir
-        self.image_files = sorted([f for f in os.listdir(img_dir) if f.endswith(".png")])[:-1]
-        self.next_image_files = sorted([f for f in os.listdir(img_dir) if f.endswith(".png")])[1:]
+        self.image_files = np.sort(np.array([f for f in os.listdir(img_dir) if f.endswith(".png")]))[0:-1:jump]
+        self.next_image_files = np.sort(np.array([f for f in os.listdir(img_dir) if f.endswith(".png")]))[1::jump]
         self.cutoff = cutoff
         self.transform = transform
 
     def __len__(self):
 
         if not self.cutoff:
-            return len(self.image_files)
-        return max(self.cutoff, len(self.image_files))
+            return self.image_files.shape[0]
+        return min(self.cutoff, self.image_files.shape[0])
 
     def __getitem__(self, idx):
 
         img_name = os.path.join(self.img_dir, self.image_files[idx])
         next_img_name = os.path.join(self.img_dir, self.next_image_files[idx])
 
-        image = Image.open(img_name)
+        imag = Image.open(img_name)
         next_image = Image.open(next_img_name)
 
         if self.transform:
-            image = self.transform(image)
+            imag = self.transform(imag)
             next_image = self.transform(next_image)
 
-        return image, next_image
+        return imag, next_image
+
+    def get_file_names(self, idx):
+        return self.image_files[idx], self.next_image_files[idx]
 
 def scale_dims(dims: tuple[int], output_size):
     assert len(dims) == 2
@@ -102,13 +105,13 @@ class Rescale_Flow:
 
 class FlowBasedDataset(OptFlowDataset):
 
-    def __init__(self, img_dir, flow_dir=None, cutoff=None,
-                 transform=Compose([Resize(320), CenterCrop(320), ToTensor()])):
+    def __init__(self, img_dir, flow_dir=None, cutoff=None, transform=None, jump=1):
 
-        super(FlowBasedDataset, self).__init__(img_dir, cutoff, transform)
+        super(FlowBasedDataset, self).__init__(img_dir, cutoff, transform, jump)
         self.flow_dir = flow_dir
-        self.flow_files = sorted([f for f in os.listdir(img_dir) if f.endswith(".png")])  # change to actual ending
+        self.flow_files = np.sort(np.array([f for f in os.listdir(img_dir) if f.endswith(".png")]))  # change to actual ending
 
+    # fix this crap. oof.
     def __getitem__(self, idx):
 
         image, next_image = super(FlowBasedDataset, self).__getitem__(idx)
@@ -122,10 +125,9 @@ class FlowBasedDataset(OptFlowDataset):
 
 class PSNRBasedDataset(OptFlowDataset):
 
-    def __init__(self, img_dir, cutoff=None,
-                 transform=Compose([Resize(320), CenterCrop(320), ToTensor()])):
+    def __init__(self, img_dir, cutoff=None, transform=None, jump=1):
 
-        super(PSNRBasedDataset, self).__init__(img_dir, cutoff, transform)
+        super(PSNRBasedDataset, self).__init__(img_dir, cutoff, transform, jump)
 
 
 if __name__ == '__main__':

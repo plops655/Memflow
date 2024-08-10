@@ -53,17 +53,9 @@ class Encoder(nn.Module):
 
         x = nn.Sequential(self.conv1, self.norm1, nn.ReLU())(x)
 
-        # x = self.layer1(x)
-        x = ResUnit(in_dimensions=64, out_dimensions=64, stride=1).forward(x)
-        x = ResUnit(in_dimensions=64, out_dimensions=64, stride=2).forward(x)
-
-        # x = self.layer2(x)
-        x = ResUnit(in_dimensions=64, out_dimensions=128, stride=1).forward(x)
-        x = ResUnit(in_dimensions=128, out_dimensions=128, stride=2).forward(x)
-
-        # x = self.layer3(x)
-        x = ResUnit(in_dimensions=128, out_dimensions=192, stride=1).forward(x)
-        x = ResUnit(in_dimensions=192, out_dimensions=192, stride=1).forward(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
 
         x = nn.Sequential(self.conv2, self.norm2, nn.ReLU())(x)
 

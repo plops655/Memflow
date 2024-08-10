@@ -8,7 +8,7 @@ from core.upsample_flow import Upsample_Flow
 from Loss import CascadingL1Loss
 from Loss import PSNRLoss
 
-from utils.consts import H, W, batch_sz, norm_fn, GRU_iterations, loss_cascade_ratio, dropout
+from utils.consts import device, H, W, batch_sz, norm_fn, hidden_dim, GRU_iterations, loss_cascade_ratio, dropout
 
 import torch
 import torch.nn as nn
@@ -16,12 +16,12 @@ import torch.nn as nn
 
 class BaseModel(nn.Module):
 
-    def __init__(self):
+    def __init__(self, inTrain: bool):
         super(BaseModel, self).__init__()
 
-        # self.curr_flow = torch.empty((2, consts.H, consts.W))
+        self.curr_flow = torch.zeros((batch_sz, 2, H // 8, W // 8)).to(device)
 
-        self.curr_flow = torch.zeros((batch_sz, 2, H // 8, W // 8))
+        self.inTrain = inTrain
 
         self.siamese_encoder = Encoder(dropout=dropout)
         self.context_encoder = Encoder(dropout=dropout)
@@ -38,7 +38,7 @@ class BaseModel(nn.Module):
 
 # class FlowModel(BaseModel):
 #
-#     def __init__(self, dataset, epochs, optimizer):
+#     def __init__(self, inTrain, dataset, epochs, optimizer):
 #
 #         super(FlowModel, self).__init__(dataset, epochs, optimizer)
 #
@@ -79,9 +79,9 @@ class BaseModel(nn.Module):
 
 class PSNRModel(BaseModel):
 
-    def __init__(self):
+    def __init__(self, inTrain: bool):
 
-        super(PSNRModel, self).__init__()
+        super(PSNRModel, self).__init__(inTrain)
 
     def forward(self, frames_0, frames_1):
 
@@ -90,11 +90,12 @@ class PSNRModel(BaseModel):
 
         context_feature = self.context_encoder.forward(frames_0)
 
-        list_of_delta_f = []
-        downsampled_delta = torch.zeros((batch_sz, 2, H // 8, W // 8))
-        downsampled_delta.requires_grad = True
-        hidden_state = torch.zeros((batch_sz, 64, H // 8, W // 8))
+        if self.inTrain:
+            list_of_delta_f = []
 
+        downsampled_delta = torch.zeros((batch_sz, 2, H // 8, W // 8)).to(device)
+        downsampled_delta.requires_grad = True
+        hidden_state = torch.zeros((batch_sz, hidden_dim, H // 8, W // 8)).to(device)
 
         for GRU_iteration in range(GRU_iterations):
             predicted_flow = self.curr_flow.detach() + downsampled_delta
@@ -114,6 +115,10 @@ class PSNRModel(BaseModel):
 
             delta_f = self.upsampler.forward(downsampled_delta, hidden_state)
 
-            list_of_delta_f.append(delta_f)
+            if self.inTrain:
+                list_of_delta_f.append(delta_f)
 
-        return list_of_delta_f
+        if self.inTrain:
+            return list_of_delta_f
+
+        return delta_f
